@@ -1,4 +1,4 @@
-NIST Autonomous Formulation Laboratory - Automation Software
+Fork of NIST Autonomous Formulation Laboratory - Automation Software for sample loader implementation
 
 This package contains the core laboratory automation software used in the NIST AFL platform.
 
