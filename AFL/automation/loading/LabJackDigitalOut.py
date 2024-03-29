@@ -4,7 +4,7 @@ from AFL.automation.loading.Sensor import Sensor
 import time
 
 class LabJackDigitalOut():# xxx todo: generic digitalout class?Sensor):
-    def __init__(self,devicetype="ANY",connection="ANY",deviceident="ANY",port_to_write="DAC0",polling_rate=200,shared_device=None,intermittent_device_handle=False):
+    def __init__(self,devicetype="ANY",connection="ANY",deviceident="ANY",port_to_write="TDAC6",polling_rate=200,shared_device=None,intermittent_device_handle=False):
         '''
     	Initialize a LabJack connection
     	
@@ -38,6 +38,7 @@ class LabJackDigitalOut():# xxx todo: generic digitalout class?Sensor):
         numSkippedIntervals = ljm.waitForNextInterval(self.intervalHandle)
         #if self.intermittent_device_handle:
         #    self.device_handle = ljm.openS(self.devicetype, self.connection, self.deviceident)
+        print(f'Writing val {val} to port {self.port_to_write}')
         result = ljm.eWriteName(self.device_handle, self.port_to_write,val)
         #if self.intermittent_device_handle:
         #    ljm.close(self.device_handle)

@@ -73,6 +73,7 @@ class LoadStopperDriver(Driver):
     #@Driver.unqueued()
     #@Driver.quickbar(qb={'button_text':'calibrate', 'params':{}})
     def calibrate_sensor(self):
+        print('calling sensor calibrate')
         return self.sensor.calibrate()
 
     #@Driver.unqueued()
@@ -92,6 +93,7 @@ class LoadStopperDriver(Driver):
     #@Driver.unqueued()
     #@Driver.quickbar(qb={'button_text':'reset', 'params':{}})
     def reset(self):
+        print('resetting load stopper')
         self.reset_poll()
         self.reset_stopper()
         if self._app is not None:

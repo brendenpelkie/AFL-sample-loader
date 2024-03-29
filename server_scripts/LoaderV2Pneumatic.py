@@ -24,7 +24,7 @@ from AFL.automation.loading.LabJackDigitalOut import LabJackDigitalOut
 from AFL.automation.loading.LabJackSensor import LabJackSensor
 from AFL.automation.loading.LoadStopperDriver import LoadStopperDriver
 
-data = DataTiled('http://10.42.0.1:8000',api_key = os.environ['TILED_API_KEY'],backup_path='/home/pi/.afl/json-backup')
+data = None#DataTiled('http://10.42.0.1:8000',api_key = os.environ['TILED_API_KEY'],backup_path='/home/pi/.afl/json-backup')
 
 #load stopper stuff
 sensor = LabJackSensor(port_to_read='AIN0',reset_port='DIO6')
@@ -48,10 +48,10 @@ pump = PressureControllerAsPump(p_ctrl,dispense_pressure = 5, implied_flow_rate 
 #gpio = PiGPIO({23:'ARM_UP',24:'ARM_DOWN'},pull_dir='DOWN')
 #16,19 also shot
 
-gpio = PiGPIO({4:'DOOR',14:'ARM_UP',15:'ARM_DOWN'},pull_dir='UP') #: p21-blue, p20-purple: 1, p26-grey: 1}
+#gpio = PiGPIO({4:'DOOR',14:'ARM_UP',15:'ARM_DOWN'},pull_dir='UP') #: p21-blue, p20-purple: 1, p26-grey: 1}
 
 
-driver = PneumaticSampleCell(pump,relayboard,digitalin=gpio,load_stopper=load_stopper)
+driver = PneumaticSampleCell(pump,relayboard,digitalin=None,load_stopper=load_stopper)
 server = APIServer('CellServer',data=data)
 server.add_standard_routes()
 server.create_queue(driver)

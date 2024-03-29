@@ -215,11 +215,15 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
             self.state = f'LOAD IN PROGRESS to {load_dest_label}'
         print('sending dispense command')
         if self.config['load_mode'] == 'static':
+            print('running static load')
             self.pctrl.timed_dispense(self.config['load_pressure'],self.config['load_timeout'],block=False)
+            print('timed dispense function returned')
         elif self.config['load_mode'] == 'ramp':
             self.pctrl.ramp_dispense(self.config['load_pressure'],self.config['ramp_load_stop_pressure'],self.config['load_timeout'],const_time = self.config['load_timeout']-self.config['ramp_load_duration'])
         else:
             raise ValueError('invalid load_mode in config.  cannot load.  valid values are "static" or "ramp"')
+        
+        print('at the wait step')
         while(self.pctrl.dispenseRunning() and not self.loadStoppedExternally):
             time.sleep(0.02)
             
@@ -413,7 +417,7 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
                 for ls in self.load_stopper:
                     ls.reset_poll()
                     ls.reset_stopper()
-                    if ls_app is not None:
+                    if ls._app is not None:
                         ls.poll.app = self._app
                         ls.stopper.app = self._app
                     if ls._data is not None:

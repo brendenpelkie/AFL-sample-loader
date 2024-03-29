@@ -34,6 +34,7 @@ class LabJackSensor(Sensor):
     	ljm.close(self.device_handle)
     	
     def calibrate(self):
+        print('calibrating bubble sensor')
         ljm.eWriteName(self.device_handle,self.fio,0)
         time.sleep(0.2)
         ljm.eWriteName(self.device_handle,self.fio,1)

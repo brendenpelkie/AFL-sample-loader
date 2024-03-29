@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify,send_file
 
 from flask_cors import CORS
+import numpy as np
 
 #authentication module
 from flask_jwt_extended import (
@@ -463,6 +464,7 @@ class APIServer:
     @jwt_required()
     def enqueue(self):
         task = request.json
+        print('Queueing task: ', task)
         if 'queue_loc' in task:
             queue_loc = task['queue_loc']
             del task['queue_loc']

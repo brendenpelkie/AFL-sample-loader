@@ -77,9 +77,11 @@ class StopLoadCBv1(SensorCallbackThread):
         self.post_detection_sleep = post_detection_sleep 
         self.timeout = datetime.timedelta(seconds=timeout)
         self.baseline_duration = baseline_duration
+        print('Stop load V1 inited')
 
         
-    def process_signal(self): 
+    def process_signal(self):
+        print('processing signal')
         if 'PROGRESS' in getServerState(self.load_client):
             datestr = datetime.datetime.strftime(datetime.datetime.now(),'%y%m%d-%H:%M:%S')
             self.update_status(f'[{datestr}] Detected a load...')
@@ -137,7 +139,7 @@ class StopLoadCBv2(SensorCallbackThread):
         threshold_v_step = 1,
         threshold_std = 2.5,
         timeout = 120,
-        min_load_time=30,
+        min_load_time=2,
         loadstop_cooldown = 2,
         post_detection_sleep = 0.2,
         baseline_duration = 2,
@@ -161,10 +163,16 @@ class StopLoadCBv2(SensorCallbackThread):
         self.trigger_on_end = trigger_on_end
         self.instatrigger = instatrigger
 
+        print('stop load V2 inited')
+
         print(f'StopLoad thread starting with data = {self.data} and sensor label = {self.sensorlabel}')
 
     def process_signal(self):
+        #print('processing signal V2')
+        print(self.sensorlabel in self.loader_comm.getServerState())
+        #print(self.loader_comm.getServerState())
         if ('PROGRESS' in self.loader_comm.getServerState()) and (self.sensorlabel in self.loader_comm.getServerState()): #make sure this sensor is queued for this load
+            print('signal process started')
             datestr = datetime.datetime.strftime(datetime.datetime.now(),'%y%m%d-%H:%M:%S')
             self.update_status(f'[{datestr}] Detected a load...')
             start = datetime.datetime.now()
@@ -175,6 +183,8 @@ class StopLoadCBv2(SensorCallbackThread):
             time.sleep(self.baseline_duration)
             
             signal = np.array(self.poll.read_load_buffer())
+
+            print('signal read: ', signal)
             
             baseline_val = np.mean(signal[-self.threshold_npts:,1])#column 0 is microseconds since beginning of load
             self.update_status(f'Found baseline at {baseline_val}')
