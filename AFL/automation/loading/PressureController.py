@@ -10,7 +10,9 @@ class PressureController():
         Perform a pressure dispense at pressure `dispense_pressure`, stopping after `dispense_time`.
         This dispense can be interrupted by calling self.stop().
         '''
+        print('PressureController timed dispense')
         self.active_callback = threading.Timer(dispense_time,self.stop)
+        self.start_time = time.time()
         self.set_P(dispense_pressure)
         self.active_callback.start()
         
@@ -69,7 +71,8 @@ class PressureController():
         '''
         Abort the current timed dispense action.
         '''
-        print(f'Dispense stop was called, callback status {self.dispenseRunning()}')
+        dispense_time = time.time() - self.start_time
+        print(f'Dispense stop was called after {dispense_time} s, callback status {self.dispenseRunning()}')
         self.set_P(0) 
         try:
             self.active_callback.cancel()   

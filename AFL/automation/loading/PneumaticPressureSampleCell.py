@@ -25,12 +25,12 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
     defaults['arm_move_delay'] = 0.2
     defaults['vent_delay'] = 0.5
     defaults['rinse_program'] = [
-                                ('rinse1',5),
+                                ('rinse1',30),
                                 (None,2),
-                                ('rinse2',5),
+                                ('rinse2',30),
                                 ('blow',5),
                                 (None,0.5),
-                                ('blow',5)
+                                ('blow',60)
                                 ] 
     defaults['external_load_complete_trigger'] = False
     defaults['ramp_load_stop_pressure'] = 7
@@ -219,6 +219,7 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
             self.pctrl.timed_dispense(self.config['load_pressure'],self.config['load_timeout'],block=False)
             print('timed dispense function returned')
         elif self.config['load_mode'] == 'ramp':
+            print('running ramp load')
             self.pctrl.ramp_dispense(self.config['load_pressure'],self.config['ramp_load_stop_pressure'],self.config['load_timeout'],const_time = self.config['load_timeout']-self.config['ramp_load_duration'])
         else:
             raise ValueError('invalid load_mode in config.  cannot load.  valid values are "static" or "ramp"')
@@ -229,9 +230,12 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
             
         
         self.loadStoppedExternally = False
+        print('sample cell function knows load stopped, calling relayboard')
         self.relayboard.setChannels({'postsample':False})
         self.state = 'LOADED'
         time.sleep(1) # crude hack to allow sensor to push data into packet
+
+        
     @Driver.quickbar(qb={'button_text':'Advance Sample',
         'params':{'sampleVolume':{'label':'Sample Volume (mL)','type':'float','default':0.3}}})
     def advanceSample(self,load_dest_label=''):
@@ -274,7 +278,7 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
     
     @Driver.unqueued(render_hint='raw')
     def stopLoad(self,**kwargs):
-        print(kwargs)
+        #print(kwargs)
         try:
             if kwargs['secret'] == 'xrays>neutrons':
                 if 'LOAD IN PROGRESS' not in self.state:
@@ -307,6 +311,7 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
         self.relayboard.setChannels({'piston-vent':False,'postsample':True})
 
         for i,(step,waittime) in enumerate(self.config['rinse_program']):
+            print(waittime)
             self.rinse_status = f'Rinse Program Step {i}/{len(self.config["rinse_program"])}: {step} for {waittime}s'
             if step is not None:
                 if step == 'ctrlblow':

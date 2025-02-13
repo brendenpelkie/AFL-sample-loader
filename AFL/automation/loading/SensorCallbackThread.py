@@ -169,7 +169,7 @@ class StopLoadCBv2(SensorCallbackThread):
 
     def process_signal(self):
         #print('processing signal V2')
-        print(self.sensorlabel in self.loader_comm.getServerState())
+        #print(self.sensorlabel in self.loader_comm.getServerState())
         #print(self.loader_comm.getServerState())
         if ('PROGRESS' in self.loader_comm.getServerState()) and (self.sensorlabel in self.loader_comm.getServerState()): #make sure this sensor is queued for this load
             print('signal process started')
@@ -192,6 +192,7 @@ class StopLoadCBv2(SensorCallbackThread):
                 self.data[f'{self.sensorlabel}_stopper_baseline_voltage'] = baseline_val
             while True and (not self._stop):
                 signal = np.array(self.poll.read_load_buffer())
+                #print(signal)
 
                 small_v_step = np.abs(np.mean(signal[-self.threshold_npts:,1])-baseline_val) < self.threshold_v_step 
                 large_std = np.std(signal[-self.threshold_npts:,1]) > self.threshold_std
@@ -199,6 +200,8 @@ class StopLoadCBv2(SensorCallbackThread):
                 time_since_load_start = datetime.datetime.now()-start 
                 timed_out = time_since_load_start > self.timeout
                 too_soon = time_since_load_start < self.min_load_time
+
+                #print('voltage: ', np.mean(signal[-self.threshold_npts:,1]))
                 
                 if too_soon:
                     time.sleep(self.period)

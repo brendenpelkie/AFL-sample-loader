@@ -26,11 +26,11 @@ from AFL.automation.loading.PneumaticPressureSampleCell import PneumaticPressure
 #data = DataTiled('http://10.42.0.1:8000',api_key = os.environ['TILED_API_KEY'],backup_path='/home/pi/.afl/json-backup')
 
 #load stopper stuff
-sensor_sans = LabJackSensor(port_to_read='AIN0',reset_port='DIO6')
+sensor_sans = LabJackSensor(port_to_read='AIN0',reset_port='DIO5')
 load_stopper_sans = LoadStopperDriver(sensor_sans,name='LoadStopperDriver_sans',auto_initialize=False,sensorlabel='')
 
-sensor_spec = LabJackSensor(port_to_read='AIN1',reset_port='DIO7')
-load_stopper_spec = LoadStopperDriver(sensor_spec,name='LoadStopperDriver_spec',auto_initialize=False,sensorlabel='')
+#sensor_spec = LabJackSensor(port_to_read='AIN1',reset_port='DIO7')
+#load_stopper_spec = LoadStopperDriver(sensor_spec,name='LoadStopperDriver_spec',auto_initialize=False,sensorlabel='')
 
 
 
@@ -46,11 +46,11 @@ p_ctrl = DigitalOutPressureController(digout,3)
 
 #gpio = PiGPIO({4:'DOOR',14:'ARM_UP',15:'ARM_DOWN'},pull_dir='UP') #: p21-blue, p20-purple: 1, p26-grey: 1}
 
-driver = PneumaticPressureSampleCell(p_ctrl,relayboard,load_stopper=[load_stopper_sans,load_stopper_spec])
+driver = PneumaticPressureSampleCell(p_ctrl,relayboard,load_stopper=[load_stopper_sans])
 server = APIServer('CellServer')
 server.add_standard_routes()
 server.create_queue(driver)
-server.init_logging(toaddrs=['tbm@nist.gov'])
+server.init_logging(toaddrs=['bgpelkie@uw.edu'])
 server.run(host='0.0.0.0',port=server_port, debug=False)
 
 
