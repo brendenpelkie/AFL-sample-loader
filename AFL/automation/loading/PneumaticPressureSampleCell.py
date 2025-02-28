@@ -43,7 +43,8 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
                       rinse2_tank_level=950,
                       waste_tank_level=0,
                       load_stopper=None,
-                      overrides=None, 
+                      overrides=None,
+                      jubilee = None, 
                       ):
         '''
             pctrl: a pressurecontroller object supporting the set_P method() and the optional p_ramp() method.
@@ -61,7 +62,7 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
         self.relayboard = relayboard
         self.cell_state = defaultdict(lambda: 'clean')
         self.digitalin = digitalin
-
+        self.jubilee = jubilee
         self.rinse1_tank_level = rinse1_tank_level
         self.waste_tank_level = waste_tank_level
         self.rinse2_tank_level = rinse2_tank_level
@@ -163,6 +164,7 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
         return status
  
     def _arm_interlock_check(self):
+        #todo: check that Jubilee is in safe position before moving arm
         if self._USE_DOOR_INTERLOCK:
             oldstate = self.state
             while self.digitalin.state['DOOR']:
@@ -191,6 +193,21 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
             time.sleep(self.config['arm_move_delay'])
         self.arm_state = 'DOWN'
 
+
+    def prepareLoad(self):
+        """
+        Raises cell arm when it is safe to do so 
+        """
+
+        if self.state != 'RINSED':
+            raise Exception('Tried to prepare load but cell not RINSED.')
+
+        if not self.jubilee.get_safety_state():
+            raise Exception('Tried to prepare load but Jubilee is not in a safe position.')
+
+        self._arm_up()
+        self.state = 'READY'
+
     @Driver.quickbar(qb={'button_text':'Load Sample',
         'params':{'sampleVolume':{'label':'Sample Volume (mL)','type':'float','default':0.3}}})
     def loadSample(self,cellname='cell',sampleVolume=None,load_dest_label=''):
@@ -202,6 +219,9 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
         
         if self.state != 'READY':
             raise Exception('Tried to load sample but cell not READY.')
+        if not self.jubilee.get_safety_state():
+            raise Exception('Tried to load sample but Jubilee is not in a safe position.')
+            
         self.state = 'PREPARING TO LOAD'
         self.relayboard.setChannels({'piston-vent':True,'postsample':False})
         self._arm_down()
@@ -326,7 +346,7 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
                     self.relayboard.setChannels({step:False})
         self.relayboard.setChannels({'postsample':False})
         self._arm_up()
-        self.state = 'READY'
+        self.state = 'RINSED'
         self.rinse_status = 'Not Rinsing'
     
     def rinseAll(self):
