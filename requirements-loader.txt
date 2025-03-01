@@ -2,3 +2,13 @@ pi-plates
 spidev
 RPi-GPIO
 labjack-ljm
+requests
+flask
+flask_cors
+flask_jwt_extended
+pandas
+numpy
+tiled
+entrypoints
+serial
+
