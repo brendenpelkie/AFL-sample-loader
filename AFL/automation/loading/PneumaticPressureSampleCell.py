@@ -345,7 +345,6 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
                 else:
                     self.relayboard.setChannels({step:False})
         self.relayboard.setChannels({'postsample':False})
-        self._arm_up()
         self.state = 'RINSED'
         self.rinse_status = 'Not Rinsing'
     
