@@ -4,30 +4,46 @@ Interface to get state for science jubilee platform to coordinate loading activi
 
 from AFL.automation.APIServer.Driver import Driver
 import requests
+from requests.adapters import HTTPAdapter, Retry
+import json
+import logging
+import time
 
-
+logger = logging.getLogger(__name__)
 
 class ScienceJubilee(Driver):
 
     def __init__(self, address, safe_position):
         self.address = address
         self.safe_position = safe_position
+        #self.connect()
+        
+        requests_session = requests.Session()
+        retries = Retry(
+            total=5, backoff_factor=0.1, status_forcelist=[500, 502, 503, 504]
+        )
+
+        requests_session.mount("http://", HTTPAdapter(max_retries=retries))
+        requests_session.headers["Connection"] = "close"
+        self.session = requests_session
+
 
     def get_safety_state(self):
         """
         Returns the safety state of the machine.
         """
         positions = self.position()
+        print('Jubilee position: ', positions)
         x, y, z = positions[0], positions[1], positions[2]
         
         # Check if position is within safe bounds
-        if x >= self.safe_position['x']:
+        if x > self.safe_position[0]:
             return False
             
-        if y <= self.safe_position['y']:
+        if y < self.safe_position[1]:
             return False
             
-        if z <= self.safe_position['z']:
+        if z < self.safe_position[2]:
             return False
 
         return True
@@ -112,11 +128,6 @@ class ScienceJubilee(Driver):
                             )
 
                             response = response.text
-                            # crash detection monitoring happens here
-                            if self.crash_detection:
-                                if "crash detected" in response:
-                                    logger.error("Jubilee crash detected")
-                                    handler_response = self.crash_handler.handle_crash()
                             break
                         elif time.time() - tic > response_wait:
                             response = None
@@ -134,3 +145,45 @@ class ScienceJubilee(Driver):
                 response = None
         # TODO: handle this with logging. Also fix so all output goes to logs
         return response
+
+
+    def connect(self):
+        """Connects to Jubilee over http.
+
+        :raises MachineStateError: If the connection to the machine is unsuccessful.
+        """
+        try:
+            # "Ping" the machine by updating the only cacheable information we care about.
+            # TODO: This should handle a response from self.gcode of 'None' gracefully.
+            max_tries = 50
+            for i in range(max_tries):
+                response = json.loads(self.gcode('M409 K"move.axes[].homed"'))[
+                    "result"
+                ][:4]
+                if len(response) == 0:
+                    continue
+                else:
+                    break
+            # These data members are tied to @properties of the same name
+
+        except json.decoder.JSONDecodeError as e:
+            raise MachineStateError("DCS not ready to connect.") from e
+        except requests.exceptions.Timeout as e:
+            raise MachineStateError(
+                "Connection timed out. URL may be invalid, or machine may not be connected to the network."
+            ) from e
+
+    def delay_time(self, n):
+        """
+        Calculate delay time for next request. dumb hard code for now, could be fancy exponential backoff
+        """
+        if n == 0:
+            return 0
+        if n < 10:
+            return 0.1
+        if n < 20:
+            return 0.2
+        if n < 30:
+            return 0.3
+        else:
+            return 1

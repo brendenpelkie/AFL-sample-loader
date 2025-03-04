@@ -234,6 +234,7 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
         else:
             self.state = f'LOAD IN PROGRESS to {load_dest_label}'
         print('sending dispense command')
+        """
         if self.config['load_mode'] == 'static':
             print('running static load')
             self.pctrl.timed_dispense(self.config['load_pressure'],self.config['load_timeout'],block=False)
@@ -254,6 +255,20 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
         self.relayboard.setChannels({'postsample':False})
         self.state = 'LOADED'
         time.sleep(1) # crude hack to allow sensor to push data into packet
+        """
+        self.pump.dispense(self.config['catch_to_cell_vol']+sampleVolume/2,block=False)
+        while(self.pump.getStatus()[0] != 'S' and not self.loadStoppedExternally):
+            #print(f'awaiting pump complete, {self.pump.getStatus()}')
+            time.sleep(0.1)
+
+        infusion_vol = self.pump.getStatus()[1]
+        self.pump_level -= infusion_vol
+        if self.pump_level<0:
+            raise Exception(f'Pump level found to be less than zero: {self.pump_level}')
+
+        self.loadStoppedExternally = False
+        self.relayboard.setChannels({'postsample':False})
+        self.state = 'LOADED'
 
         
     @Driver.quickbar(qb={'button_text':'Advance Sample',
@@ -323,11 +338,12 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
     @Driver.quickbar(qb={'button_text':'Rinse Cell'})
     def rinseCell(self,cellname='cell'):
         if self.state != 'LOADED':
-            if self.state == 'READY':
+            if self.state == 'READY' or self.state == 'RINSED':
                 warnings.warn('Rinsing despite READY state.  This is OK, just a little extra.  Lowering the arm to rinse.',stacklevel=2)
                 self._arm_down()
             else:
                 raise Exception(f'Cell in inconsistent state: {self.state}')
+        self.state = 'RINSING'
         self.relayboard.setChannels({'piston-vent':False,'postsample':True})
 
         for i,(step,waittime) in enumerate(self.config['rinse_program']):
