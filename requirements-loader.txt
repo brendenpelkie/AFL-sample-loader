@@ -6,6 +6,8 @@ requests
 flask==2.2.2
 flask_cors
 flask_jwt_extended
+Werkzeug==2.2.2
+pint
 pandas
 numpy
 tiled
