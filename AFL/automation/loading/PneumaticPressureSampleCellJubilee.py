@@ -36,7 +36,7 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
     defaults['ramp_load_stop_pressure'] = 7
     defaults['ramp_load_duration'] = 20
 
-    def __init__(self,pctrl,
+    def __init__(self,pump,
                       relayboard,
                       digitalin=None,
                       rinse1_tank_level=950,
@@ -58,7 +58,6 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
         '''
         self._app = None
         Driver.__init__(self,name='PneumaticSampleCell',defaults=self.gather_defaults(),overrides=overrides)
-        self.pctrl = pctrl
         self.relayboard = relayboard
         self.cell_state = defaultdict(lambda: 'clean')
         self.digitalin = digitalin
@@ -83,10 +82,11 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
 
 
         self.relayboard.setChannels({'piston-vent':True})
-        self._arm_up()
+        #self._arm_up()
         time.sleep(0.2)
-        self.state = 'READY'
+        self.state = 'INITIALIZED'
         self.rinse_status = 'Not Rinsing'
+        self.arm_state = 'UNKNOWN'
         
         if load_stopper is not None:
             if type(load_stopper) is not list:
@@ -174,6 +174,9 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
 
     def _arm_up(self):
         self._arm_interlock_check()
+        if not self.jubilee.get_safety_state():
+            raise AssertionError('Jubilee not in safe place')
+        self.jubilee
         self.relayboard.setChannels({'piston-vent':True,'arm-up':True,'arm-down':False})
         if self._USE_ARM_LIMITS:
             while self.digitalin.state['ARM_UP']:
@@ -184,6 +187,8 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
 
     def _arm_down(self):
         self._arm_interlock_check()
+        if not self.jubilee.get_safety_state():
+            raise AssertionError('Jubilee not in safe place')
         self.relayboard.setChannels({'piston-vent':True,'arm-up':False,'arm-down':True})
         time.sleep(self.config['arm_move_delay'])
         if self._USE_ARM_LIMITS:
@@ -340,6 +345,8 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
         if self.state != 'LOADED':
             if self.state == 'READY' or self.state == 'RINSED':
                 warnings.warn('Rinsing despite READY state.  This is OK, just a little extra.  Lowering the arm to rinse.',stacklevel=2)
+                self._arm_down()
+            elif self.state == 'INITIALIZED':
                 self._arm_down()
             else:
                 raise Exception(f'Cell in inconsistent state: {self.state}')

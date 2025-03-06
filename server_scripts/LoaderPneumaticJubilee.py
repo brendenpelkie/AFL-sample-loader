@@ -56,7 +56,7 @@ print('Jubilee: ', jubilee)
 #gpio = PiGPIO({4:'DOOR',14:'ARM_UP',15:'ARM_DOWN'},pull_dir='UP') #: p21-blue, p20-purple: 1, p26-grey: 1}
 
 
-driver = PneumaticPressureSampleCell(pump,relayboard,digitalin=None,load_stopper=load_stopper, jubilee = jubilee)
+driver = PneumaticPressureSampleCell(pump,relayboard,digitalin=None, load_stopper=load_stopper, jubilee = jubilee)
 server = APIServer('CellServer',data=data)
 server.add_standard_routes()
 server.create_queue(driver)

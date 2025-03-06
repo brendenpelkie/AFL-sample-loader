@@ -97,6 +97,7 @@ class ScienceJubilee(Driver):
                 )
 
                 reply_count = reply_response.json()["result"]["reply"]
+                print('Init reply count: ', reply_count)
                 buffer_response = self.session.get(
                     f"http://{self.address}/rr_gcode?gcode={cmd}", timeout=timeout
                 )
@@ -117,6 +118,7 @@ class ScienceJubilee(Driver):
                             f"MODEL response, status: {new_reply_response.status_code}, headers:{new_reply_response.headers}, content:{new_reply_response.content}"
                         )
                         new_reply_count = new_reply_response.json()["result"]["reply"]
+                        print('new reply count: ', new_reply_count)
 
                         if new_reply_count != reply_count:
                             response = self.session.get(
