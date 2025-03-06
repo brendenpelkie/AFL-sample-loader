@@ -28,7 +28,7 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
                                 ('rinse1',30),
                                 (None,2),
                                 ('rinse2',30),
-                                ('blow',5),
+                                ('blow',15),
                                 (None,0.5),
                                 ('blow',60)
                                 ] 
@@ -36,6 +36,11 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
     defaults['ramp_load_stop_pressure'] = 7
     defaults['ramp_load_duration'] = 20
 
+    defaults['load_speed'] = 2
+    defaults['air_speed'] = 30
+    defaults['withdraw_vol'] = 1.5
+    defaults['large_dispense_vol'] = 5
+    defaults['catch_to_cell_vol'] = 1.15
     def __init__(self,pump,
                       relayboard,
                       digitalin=None,
@@ -57,6 +62,7 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
 
         '''
         self._app = None
+        self.pump = pump
         Driver.__init__(self,name='PneumaticSampleCell',defaults=self.gather_defaults(),overrides=overrides)
         self.relayboard = relayboard
         self.cell_state = defaultdict(lambda: 'clean')
@@ -84,6 +90,10 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
         self.relayboard.setChannels({'piston-vent':True})
         #self._arm_up()
         time.sleep(0.2)
+        self.pump.setRate(self.config['air_speed'])
+        # self.pump.dispense(self.config['large_dispense_vol'])
+        # self.pump.withdraw(self.config['withdraw_vol'])
+        self.reset_pump(dispense=False)
         self.state = 'INITIALIZED'
         self.rinse_status = 'Not Rinsing'
         self.arm_state = 'UNKNOWN'
@@ -110,6 +120,14 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
         self.rinse1_tank_level = rinse1
         self.waste_tank_level = waste
         self.rinse2_tank_level = rinse2
+    
+    
+    def reset_pump(self,dispense=False):
+        self.pump.setRate(self.config['air_speed'])
+        if dispense and (self.pump_level>0):
+            self.pump.dispense(self.pump_level)
+        self.pump.withdraw(self.config['withdraw_vol'])
+        self.pump_level = self.config['withdraw_vol']
 
     @property
     def app(self):
@@ -121,7 +139,6 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
             self._app = app
         else:
             self._app = app
-            self.pctrl.app = app
             self.relayboard.app = app
             for ls in self.load_stopper:
                 ls.app = app
@@ -136,7 +153,6 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
             self._data = data
         else:
             self._data = data
-            self.pctrl.data = data
             self.relayboard.data = data
             for ls in self.load_stopper:
                 ls.data = data
@@ -325,7 +341,7 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
                     warnings.warn('Tried to stop load but load is not in progress. Doing nothing.',stacklevel=2)
                     return 'There is no load running.'
                 else:
-                    self.pctrl.stop()
+                    #self.pctrl.stop()
                     self.relayboard.setChannels({'postsample':False})
                     self.loadStoppedExternally=True
                     if self.data is not None:
@@ -353,23 +369,24 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
         self.state = 'RINSING'
         self.relayboard.setChannels({'piston-vent':False,'postsample':True})
 
+        self.rinse_status = 'Pushing with syringe...'
+        #need to dispense with piston down, and then withdraw with piston up
+        self.pump.setRate(self.config['air_speed'])
+        if self.pump_level>0:
+            self.pump.dispense(self.pump_level)
+
         for i,(step,waittime) in enumerate(self.config['rinse_program']):
-            print(waittime)
             self.rinse_status = f'Rinse Program Step {i}/{len(self.config["rinse_program"])}: {step} for {waittime}s'
             if step is not None:
-                if step == 'ctrlblow':
-                    self.pctrl.set_P(self.config['blowout_pressure'])
-                else:
-                    self.relayboard.setChannels({step:True})
+                self.relayboard.setChannels({step:True})
             time.sleep(waittime)
             if step is not None:
-                if step == 'ctrlblow':
-                    self.pctrl.set_P(0)
-                else:
-                    self.relayboard.setChannels({step:False})
+                self.relayboard.setChannels({step:False})
         self.relayboard.setChannels({'postsample':False})
         self.state = 'RINSED'
         self.rinse_status = 'Not Rinsing'
+        # self.pump.withdraw(self.config['withdraw_vol'],block=True)
+        self.reset_pump(dispense=False)
     
     def rinseAll(self):
         self.rinseCell()
