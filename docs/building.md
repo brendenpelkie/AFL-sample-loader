@@ -61,7 +61,7 @@ The frame is assembled from the extrusion pieces and the corner braces. Assemble
 We suggest wiring the solenoid valves with a quick-connect connector of your choice to make the rest of assembly and travel easier. Connect the male plug end of your quick connector to the supplied solenoid wiring if the valve came with wires. For the 5/2 valve for the clamp arm, you will need to add wires by removing the screws on the wire caps, removing the caps, and adding wires to the terminals. For the Burkert whisper valve for the piston vent, you will need to either wire your own lead using the specified connectors or buy a cable along with the valve. The Burkert valve mounts to the Jubilee-mounted catch assembly, so make sure the wire for this is long enough to reach. For this valve, pay attention to wiring polarity. Also wire yourself a ~48" connector 'extension' for each valve. Terminate one end of this extension with the female socket of your quick connector and leave the other end unterminated. Use red and black wire for this. All the wire pairs should be a single cable, so either use dual-conductor wire or place both strands in some sort of sheathing like the one suggested in the BOM. At this point, it is a good idea to label every valve. 
 
 | Label | AFL internal name |Valve type | Relay plate number | 
-| --- | ---| --- | 
+| --- | ---| --- | --- | --- |
 | Sample Hold | 'postsample' Mini solenoid cylinder | 1|
 | Vent | 'piston-vent' | Burkert whisper | 2 |
 | Sample push | 'blow' | Mini solenoid cylinder | 3 |
