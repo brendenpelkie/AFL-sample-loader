@@ -7,6 +7,7 @@ netcdf4
 jupyterlab
 ipywidgets
 ipympl
+labjack
 nodejs
 matplotlib
 seaborn
@@ -16,6 +17,7 @@ flask
 flask-jwt-extended >=4.0
 bokeh
 pillow
+pi-plates
 scikit-image
 pyserial
 requests
