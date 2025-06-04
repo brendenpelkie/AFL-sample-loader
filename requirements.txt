@@ -7,7 +7,7 @@ netcdf4
 jupyterlab
 ipywidgets
 ipympl
-labjack
+labjack-ljm
 nodejs
 matplotlib
 seaborn
