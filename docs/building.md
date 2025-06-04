@@ -157,6 +157,8 @@ Notes on purchasing:
 - Nothing here implies an endorsement of a particular vendor. Links are provided to give example sources.
 - Many of the specific-sized fasteners may be better purchased from a vendor that allows for small quantities, such as Bolt Depot in the US.
 
+> ⚠️ **Caution**  
+> Building and using this system may expose you to several hazards, including crush/pinch hazards associated with the catch clamp arm, high pressures, and mains voltages. Keep clear of all moving parts when testing and using the system. 
 
 
 ## Build guide:
@@ -253,7 +255,18 @@ Make physical tubing connections as shown in the diagram below. You will need to
 
 <img src='AFL_control_physical_connections.png'/>
 
+
+
 ### Assemble front panel
+
+Build the front panel by drilling appropriately spaced and sized holes in the acrylic sheet. There is no CAD model, just lay it out by hand in a way that makes sense. 
+
+- You may need to cut the sheet down to fit the frame.
+- Drill mounting holes for M5 screws around the edges of the frame, aligning them so the screws can thread into nuts in the extrusion channel.
+- Drill appropriately sized and positioned holes in the frame for your air supply, air enable valve, arm air lines, rinse, sample push, and rinse blow fittings, as well as M12 connectors for the vent valve and bubble sensor. Think about what is on the backside of the panel when laying this out
+  
+
+<img src='panel.JPEG'>
 
 ### Assemble catch assembly
 
@@ -285,19 +298,8 @@ Make physical tubing connections as shown in the diagram below. You will need to
 
 
 
-- Wire up all your valves using quick-connectors of your choice. This will make assembly and travel easier
-- Mount the power components: PSU, PEM. Wire this up. Don't kill yourself here.
-- Wire up the solenoid valves. This box will be a mess
-- Mount appropriate fittings onto the solenoid valves
-- Mount the solenoid valves to the frame
-- Make your front panel, if using (not strictly necessary). This is done by measure and manually with a table saw and a drill press
-- make all the tubing connections
-- Wire up the labjack with regulator out and bubble sensor in things
-- Assemble the catch arm
-    - If using Jubilee, punch some holes in Jubilee deck to screw this down
-
-- Connection diagram in powerpoint showing how everything fits together
-- Some pictures of assembled things
+> ⚠️ **Caution**  
+> Consider the catch arm to be 'live' whenever the air supply lines are connected, and do not put your hands near it for any reason. Before handling the catch assembly, disconnect the air supply lines at the panel or 5/2 valve. 
 
 ### Assemble to flow cell components
 
