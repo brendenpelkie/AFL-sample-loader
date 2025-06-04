@@ -28,7 +28,6 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
                                 ('rinse1',30),
                                 (None,2),
                                 ('rinse2',30),
-                                ('blow',15),
                                 (None,0.5),
                                 ('blow',60)
                                 ] 
@@ -190,9 +189,10 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
 
     def _arm_up(self):
         self._arm_interlock_check()
-        if not self.jubilee.get_safety_state():
-            raise AssertionError('Jubilee not in safe place')
-        self.jubilee
+        if self.jubilee is not None:
+            if not self.jubilee.get_safety_state():
+                raise AssertionError('Jubilee not in safe place')
+
         self.relayboard.setChannels({'piston-vent':True,'arm-up':True,'arm-down':False})
         if self._USE_ARM_LIMITS:
             while self.digitalin.state['ARM_UP']:
@@ -203,8 +203,10 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
 
     def _arm_down(self):
         self._arm_interlock_check()
-        if not self.jubilee.get_safety_state():
-            raise AssertionError('Jubilee not in safe place')
+        if self.jubilee is not None:
+            if not self.jubilee.get_safety_state():
+                if self.arm_state != 'DOWN': # kludge to let rinse while jubilee preps next sample
+                    raise AssertionError('Jubilee not in safe place')
         self.relayboard.setChannels({'piston-vent':True,'arm-up':False,'arm-down':True})
         time.sleep(self.config['arm_move_delay'])
         if self._USE_ARM_LIMITS:
@@ -214,17 +216,17 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
             time.sleep(self.config['arm_move_delay'])
         self.arm_state = 'DOWN'
 
-
+    @Driver.quickbar(qb={'button_text':'Prepare Load'})
     def prepareLoad(self):
         """
         Raises cell arm when it is safe to do so 
         """
 
         if self.state != 'RINSED':
-            raise Exception('Tried to prepare load but cell not RINSED.')
-
-        if not self.jubilee.get_safety_state():
-            raise Exception('Tried to prepare load but Jubilee is not in a safe position.')
+            if self.state == 'READY':
+                pass
+            else:
+                raise Exception('Tried to prepare load but cell not RINSED.')
 
         self._arm_up()
         self.state = 'READY'
@@ -240,8 +242,9 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
         
         if self.state != 'READY':
             raise Exception('Tried to load sample but cell not READY.')
-        if not self.jubilee.get_safety_state():
-            raise Exception('Tried to load sample but Jubilee is not in a safe position.')
+        if self.jubilee is not None:
+            if not self.jubilee.get_safety_state():
+                raise Exception('Tried to load sample but Jubilee is not in a safe position.')
             
         self.state = 'PREPARING TO LOAD'
         self.relayboard.setChannels({'piston-vent':True,'postsample':False})
@@ -369,11 +372,11 @@ class PneumaticPressureSampleCell(Driver,SampleCell):
         self.state = 'RINSING'
         self.relayboard.setChannels({'piston-vent':False,'postsample':True})
 
-        self.rinse_status = 'Pushing with syringe...'
+        #self.rinse_status = 'Pushing with syringe...'
         #need to dispense with piston down, and then withdraw with piston up
-        self.pump.setRate(self.config['air_speed'])
-        if self.pump_level>0:
-            self.pump.dispense(self.pump_level)
+        #self.pump.setRate(self.config['air_speed'])
+        #if self.pump_level>0:
+        #    self.pump.dispense(self.pump_level)
 
         for i,(step,waittime) in enumerate(self.config['rinse_program']):
             self.rinse_status = f'Rinse Program Step {i}/{len(self.config["rinse_program"])}: {step} for {waittime}s'
