@@ -56,12 +56,12 @@ class StopLoadCBv1(SensorCallbackThread):
         poll,
         period,
         load_client,
-        threshold_npts = 20,
-        threshold_v_step = 1,
+        threshold_npts = 15,
+        threshold_v_step = 0.75,
         threshold_std = 2.5,
         timeout = 120,
         loadstop_cooldown = 2,
-        post_detection_sleep = 0.2,
+        post_detection_sleep = 0.0,
         baseline_duration = 2,
         daemon=True,
         filepath=None,
@@ -135,9 +135,9 @@ class StopLoadCBv2(SensorCallbackThread):
         period,
         load_client=None,
         load_object=None,
-        threshold_npts = 20,
-        threshold_v_step = 1,
-        threshold_std = 2.5,
+        threshold_npts = 15,
+        threshold_v_step = 0.2,
+        threshold_std = 0.1,
         timeout = 120,
         min_load_time=2,
         loadstop_cooldown = 2,
@@ -163,9 +163,10 @@ class StopLoadCBv2(SensorCallbackThread):
         self.trigger_on_end = trigger_on_end
         self.instatrigger = instatrigger
 
-        print('stop load V2 inited')
+        print(f'stop load V2 inited with instatrigger {self.instatrigger}')
 
         print(f'StopLoad thread starting with data = {self.data} and sensor label = {self.sensorlabel}')
+        print(f'Stopload config: theshold_v_step: {self.threshold_v_step}')
 
     def process_signal(self):
         #print('processing signal V2')
@@ -174,7 +175,7 @@ class StopLoadCBv2(SensorCallbackThread):
         if ('PROGRESS' in self.loader_comm.getServerState()) and (self.sensorlabel in self.loader_comm.getServerState()): #make sure this sensor is queued for this load
             print('signal process started')
             datestr = datetime.datetime.strftime(datetime.datetime.now(),'%y%m%d-%H:%M:%S')
-            self.update_status(f'[{datestr}] Detected a load...')
+            self.update_status(f'[{datestr}] Detected a load in CBV2...')
             start = datetime.datetime.now()
 
             self.poll.reset_load_buffer()
@@ -201,7 +202,9 @@ class StopLoadCBv2(SensorCallbackThread):
                 timed_out = time_since_load_start > self.timeout
                 too_soon = time_since_load_start < self.min_load_time
 
-                #print('voltage: ', np.mean(signal[-self.threshold_npts:,1]))
+                print('voltage: ', np.mean(signal[-self.threshold_npts:,1]))
+                print('small_v_step', small_v_step)
+                print('Signal change: ', np.abs(np.mean(signal[-self.threshold_npts:,1])-baseline_val))
                 
                 if too_soon:
                     time.sleep(self.period)

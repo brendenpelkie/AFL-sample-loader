@@ -43,8 +43,6 @@ p_ctrl = DigitalOutPressureController(digout,3)
 pump = PressureControllerAsPump(p_ctrl,dispense_pressure = 5, implied_flow_rate = 5)
 jubilee = ScienceJubilee('192.168.1.2', (5, 200, 100))
 
-print('Jubilee: ', jubilee)
-
 #DummyPump() # ID for 10mL = 14.859, for 50 mL 26.43
 # pump = NE1kSyringePump('/dev/ttyUSB0',14.86,10,baud=19200,pumpid=10,flow_delay=0) # ID for 10mL = 14.859, for 50 mL 26.43
 # this is the line used in AFL ops   pump = NE1kSyringePump('/dev/ttyUSB0',14.6,10,baud=19200,pumpid=10,flow_delay=0) # ID for 10mL = 14.859, for 50 mL 26.43 (gastight)
@@ -56,7 +54,7 @@ print('Jubilee: ', jubilee)
 #gpio = PiGPIO({4:'DOOR',14:'ARM_UP',15:'ARM_DOWN'},pull_dir='UP') #: p21-blue, p20-purple: 1, p26-grey: 1}
 
 
-driver = PneumaticPressureSampleCell(pump,relayboard,digitalin=None, load_stopper=load_stopper, jubilee = jubilee)
+driver = PneumaticPressureSampleCell(pump,relayboard,digitalin=None, load_stopper=load_stopper, jubilee= jubilee)
 server = APIServer('CellServer',data=data)
 server.add_standard_routes()
 server.create_queue(driver)

@@ -39,7 +39,8 @@ class PressureControllerAsPump(SyringePump):
         dispense_time = volume / self.implied_flow_rate 
         dispense_time = dispense_time * 60 # convert from min to s as flow rate is in mL/min
 
-        #print('pump dispense time: ', dispense_time)
+        dispense_time = 120
+        print('pump dispense time: ', dispense_time)
         
         self.controller.timed_dispense(self.dispense_pressure,dispense_time,block=block)
         

@@ -11,6 +11,7 @@ class PressureController():
         This dispense can be interrupted by calling self.stop().
         '''
         print('PressureController timed dispense')
+        print(f'dispensing for {dispense_time}s')
         self.active_callback = threading.Timer(dispense_time,self.stop)
         self.start_time = time.time()
         self.set_P(dispense_pressure)
