@@ -4,6 +4,46 @@ This is a build guide for the Pozzo lab fork of the NIST AFL system. This is how
 
 ## Parts list
 
+### Resin printed components
+
+We suggest printing these parts out of an engineering SLA resin, such as Formlabs tough 2000, due to their load bearing nature.
+
+| Part name | Assembly | Link |
+| --- | --- | --- |
+| Catch holder | Catch | https://github.com/pbeaucage/AFL-hardware/blob/main/CAD-NewOrgScheme/AFL-101-(LoaderV2)/002-(CatchCarrierAssy)/AFL-101-002-01-0D%20CatchlessCatchHolder-Braced-For1inCatch-Sidebar-Lowered.stl |
+| Piston arm/ elevator arm | Catch | https://github.com/pbeaucage/AFL-hardware/blob/main/CAD-NewOrgScheme/AFL-101-(LoaderV2)/002-(CatchCarrierAssy)/AFL-101-002-01-2B%20Elevator%20arm%20r2.stl |
+
+
+
+### PLA etc. printed components
+Brackets, mounts, etc. that aren't struturally critical
+
+| Part name | Assembly | Link | Print notes |
+| --- | --- | --- | --- |
+| Rinse bottle holder | Frame | https://github.com/pbeaucage/AFL-hardware/blob/main/CAD-NewOrgScheme/AFL-102-(TravelAFL)/002-(ExternalComponents)/AFL-102-002-01-0B%20Bottle%20Holder%20for%20RoadBot%20Rail-r2.stl| 2 needed |
+| 5/2 valve holder | Frame | https://github.com/pbeaucage/AFL-hardware/blob/main/CAD-NewOrgScheme/AFL-102-(TravelAFL)/004-(PneumaticModule)/AFL-102-004-01-0D%20RoadBot%20Pneumatic%20Module%20-%20with%20Jack%20-%20r4.stl | Original design uses this for more components, we just use it to hold the 5/2 valve. Could replace with something smaller for this purpose |
+| Catch holder nut | catch | https://github.com/pbeaucage/AFL-hardware/blob/main/CAD-NewOrgScheme/AFL-101-(LoaderV2)/002-(CatchCarrierAssy)/AFL-101-002-01-3B%20CatchHolderNut.stl | |
+| Compute control module | Frame |https://github.com/brendenpelkie/AFL-sample-loader/blob/main/fabrication_files/stl/ComputeControlModule%20v6.stl | |
+| Compute control module lid  | Frame |https://github.com/brendenpelkie/AFL-sample-loader/blob/main/fabrication_files/stl/module_lid%20v2.stl | |
+| Digital regulator mount | Frame |https://github.com/brendenpelkie/AFL-sample-loader/blob/main/fabrication_files/stl/DigitalRegulator_mount_base%20v4.stl | |
+| Digital regulator clamp | Frame | https://github.com/brendenpelkie/AFL-sample-loader/blob/main/fabrication_files/stl/DigitalRegulator_mount_clamp%20v2.stl | |
+| Digital regulator rail mount | Frame | https://github.com/brendenpelkie/AFL-sample-loader/blob/main/fabrication_files/stl/DigitalRegulator_mount_railmount%20v2.stl | Need 2 |
+| Labjack rail mount | Frame | https://github.com/brendenpelkie/AFL-sample-loader/blob/main/fabrication_files/stl/LabjackT4_railmount%20v2.stl | Need 2|
+| Power entry module housing | Frame | https://github.com/brendenpelkie/AFL-sample-loader/blob/main/fabrication_files/stl/PEM_housing%20v3.stl | |
+| Power entry module housing lid | Frame |https://github.com/brendenpelkie/AFL-sample-loader/blob/main/fabrication_files/stl/PSU_socket_holder_cover%20v3.stl | | 
+| Power supply rail mount | Frame | https://github.com/brendenpelkie/AFL-sample-loader/blob/main/fabrication_files/stl/PSU_rail_mount%20v3.stl| Need 2 |
+| Regulator rail mount for static regulator | Frame |https://github.com/brendenpelkie/AFL-sample-loader/blob/main/fabrication_files/stl/Regulator_mount%20v3.stl | Need 2, intended to work with manufacturer mounting bracket |
+
+
+
+
+### Custom fabricated components
+
+| Part | Link | Notes |
+| --- | ---- | --- |
+| X-ray piston | https://github.com/pbeaucage/AFL-hardware/blob/main/CAD-NewOrgScheme/AFL-101-(LoaderV2)/001-(CatchAssy)/Catches/piston%20for%20xray.stp and https://github.com/pbeaucage/AFL-hardware/blob/main/CAD-NewOrgScheme/AFL-101-(LoaderV2)/001-(CatchAssy)/Piston-Xray-Drawing.pdf | We did not actually have these made so can't directly advise on procurement. Machine out of HDPE. Can be procured from sendcutsend etc, expensive for small quantities |
+| X-ray catch |https://github.com/pbeaucage/AFL-hardware/blob/main/CAD-NewOrgScheme/AFL-101-(LoaderV2)/001-(CatchAssy)/Catches/catch%20for%20xray.stp and  https://github.com/pbeaucage/AFL-hardware/blob/main/CAD-NewOrgScheme/AFL-101-(LoaderV2)/001-(CatchAssy)/Catch-Xray-Drawing.pdf | |
+
 - Frame parts:
     - extrusion parts
     - some brackets
@@ -458,7 +498,29 @@ With GUI: Just click the "Rinse Cell" button.
 
 
 ### Troubleshooting
+When doing any troubleshooting, it is best to run the AFL server directly (ie `python LoaderPneumaticJubilee.py`) as opposed to as a systemd service, so that you can watch the outputs of the process. Software errors that throw an error are best dealt with by following the stack trace. Generally speaking:
+- If the request is successfully received by the AFL-server as shown in the logs, the issue is on the AFL-server side of things, not the science-jubilee client code. If the requests is not recieved, look at the client.
+- Assertion errors relating to machine state not being met: Look at condition causing assertion to flag.
 
+#### Queue pausing
+The queue is set up to pause anytime something goes awry, and even when things are done out of order, for example trying to prepare the cell before rinsing it. If something pauses the queue, first fix the issue, then 'unpause' the queue using the button on the GUI or the unpuase_queue method of the science-jubilee tool
+
+#### Solenoid valves aren't switching when they are supposed to
+You can follow the state the valves are supposed to be in by watching the status on the web GUI. If you suspect a valve isn't switching correctly, test it by manually toggling it with the valve test notebook linked above. Check the wiring if you are having issues, this is the most likely cause.
+
+#### Sample stopping problems
+
+The sample stopping process is tricky and needs to be tuned. When the sample is being loaded, the bubble sensor is constantly outputting a voltage. That voltage is supposed to change significantly (~1.5V) when the phase present in the tube changes from air to liquid. This voltage is constantly read by the Labjack and processed by the StopLoadCBV2.process_signal() function in `loading/SensorCallbackThread.py`. This function runs in a separate thread from the main AFL sample loading process, and calls back to stop the load process by closing the sample hold solenoid valve once the sample is detected. Getting this to work reliably will probably require some tuning
+
+**Tuning the sensor hardware**
+The sensitivity of the sensor itself can be changed by moving the jumper between the 3 pins. This is documented in the sensor data sheet. Test different positions by manually flowing a representative liquid through tubing inside the sensor and manually watching the sensor voltage (ex with a multimeter) (while the sensor is plugged into an appropirate 5V power supply). You want to see a decent sized (1-2V) change between liquid and no liquid, without a lot of noise. Move the jumper until you find a position that works for your sample and ambient lighting conditions. 
+
+**Tuning the edge detection parameters**
+The above-mentioned sensor callback signal process function checks for several conditions to be satisfied before stopping the load. Read through the code to understand all of them. Important parameters are the amount of time to take a baseline signal for before looking for changes indicating a sample, the voltage step required to stop a load, the number of points above the threshold that must be measured for a load to register (eliminating false positives due to small amounts of remaining wash solution). To change these values, edit them in the `loading/LoadStopperDriver.py` by changing the default class constants, then delete the cached constants by deleting the file `~/.afl/LoadStopperconfig.json` or whatever the cache is called. It is helpful to print the actual observed values for these criteria when diagnosing load stopping issues. If the load stopping is not sensitive enough, i.e. samples flow right past the sensor without being stopped, try decreasing the voltage threshold or decreasing the number of points that the threshold must be observed for. If the load stopping is too sensitive, i.e. the system stops the load before the sample reaches the flow cell, try increasing these values or increasing the minimum sample load time. 
+
+#### Samples and rinse solution leak out of the catch
+- Add a few wraps of teflon thread tape underneath the piston O-ring
+- Make sure the piston is aligned in the catch and the clamp arm is closing all the way
 
 ### Registering the AFL server as a systemd service 
 
@@ -503,10 +565,9 @@ WantedBy=multi-user.target
 5. reboot
 6. Make sure it came up at boot: `systemctl status myscript.service`
 
-## Troubleshooting and tweaking:
-- Getting the arm and catch positioned right
-- Tuning the load stop parameters
-    - Make sure resistance is reasonable for your system, tweak with jumper
-    - will need to adjust load detection to work with your system
+## Additional resources
+Once again, it is highly suggested to get up to speed with the NIST version of this system before replicating what is documented here.
 
-- 
+Documentation for the AFL software including overall architecture, web app: [https://pages.nist.gov/AFL-automation/en/add-docs/index.html](https://pages.nist.gov/AFL-automation/en/add-docs/index.html)
+
+
