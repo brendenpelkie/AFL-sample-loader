@@ -1,32 +1,19 @@
-Fork of NIST Autonomous Formulation Laboratory - Automation Software for sample loader implementation
+# AFL Pneumatic Sample Loader
+This is a fork of the [NIST Autonomous Formulation Laboratory (AFL)](https://www.nist.gov/ncnr/ncnr-facility-upgrades/autonomous-formulation-lab-afl) sample loading system. It has been modified and extended to integrate with the [Science-Jubilee open automation platform](https://science-jubilee.readthedocs.io/en/latest/). 
 
-This package contains the core laboratory automation software used in the NIST AFL platform.
+The AFL sample loader provides the ability to transfer liquid samples from the deck of a Jubilee (or other similar liquid handling robot) to a measurement flow cell. It was originally developed for small-angle scattering experiments, and this implementation was also built with SAXS measurements in mind. However, it is in principle extensible to any measurement that supports a liquid flow cell sample environment. This system provides an important means to extend the capability of automated experimentation workflows to include characterization, building baseline infrastructure to enable autonomous experimentation or "self-driving labs". We have successfully used this system to fully automate the synthesis and characterization of mesoporous colloidal silicas using both our in-house SAXS instrument as well as the Advanced Photon Source 12-ID-E USAXS beamline. 
 
-Its core is the 'DeviceServer' API, a simple way of exposing functionality in simple Python classes to the outside world via HTTP servers.  It includes robust item queueing support, output rendering, and hooks to allow for 'smart' generation of user interfaces automatically.
+The system consists of a 'catch' and 'piston' assembly mounted to a swing arm clamp. To transfer a sample to a flow cell for measurement, the liquid handling robot loads the sample into the 'catch' mounted to it's deck. The clamp arm then closes, sealing the sample system. Air pressure pushes the sample through a length of tubing until it reaches the measurement flow cell. The sample is detected by a bubble/liquid sensor. Once the sample is at the flow cell, a valve closes to hold the sample there during measurement. After measurement, the sample flow path is rinsed to reset for the next sample. 
 
-Specific deviceserver instances are provided for a variety of hardware used in the AFL platform: syringe pumps, valves, multiposition flow selectors, UV-Vis spectrometers, x-ray and neutron scattering instruments/beamlines.  There are further deviceserver classes that integrate these base devices to perform higher-level functions, e.g. "loading".  These classes aim to specify instructions for running a particular protocol in a hardware-agnostic way.
+<img src='docs/AFL_systemoverview.png'/>
 
+<img src='docs/AFL_workingprinciple.png'>
 
+## Building
 
-Getting a new pi configured to run the AFL:
-
-1. Turn on the SPI interface of the raspberry pi
-2. Install the labjack software (separate from the labjack python package). Should be Linux AArch64 version from [their downloads page](https://support.labjack.com/docs/ljm-software-installer-downloads-t4-t7-t8-digit#LJMSoftwareInstallerDownloads-T4,T7,T8,Digit-Linuxx64LJMSoftwareInstallerDownloads)
-3. Clone this repo onto the pi
-4. Install requirements into your venv from r
+A full bill of materials, build instructions, and usage instructions can be found in the [build guide](docs/building.md). If you are seriously considering building this system, make sure to also read up on the current state of the original NIST system - it has likely been improved since we forked it. Find the NIST AFL software [here](https://github.com/usnistgov/AFL-automation), their documentation [here](https://pages.nist.gov/AFL-automation/en/add-docs/index.html), and their AFL landing page [here](https://www.nist.gov/ncnr/ncnr-facility-upgrades/autonomous-formulation-lab-afl). We are also available to discuss build guidance for new users. 
 
 
+## License
 
-## To queue something via API:
-
-1. Get a token with
-
-
-`curl --header "Content-Type: application/json" --request POST --data '{"username":"bgpelkie", "password":"domo_arigato"}' localhost:5000/login`
-
-2. save token as env $jwt
-
-3. Push to queue: 
-
-`curl --header "Content-Type: application/json" --header "Authorization: Bearer $jwt"  --request POST --data '{"task":"loadSample", "sampleVolume":"0.5"}' localhost:5000/enqueue`
-
+This work, as an extension of the NIST Autonomous Formulations Lab software, is licensed under the [NIST License](LICENSE). This work may be modified and distributed non-commercially. 

@@ -2,6 +2,48 @@
 
 This is a build guide for the Pozzo lab fork of the NIST AFL system. This is how we built it and may not be the way the original NIST designers have built it. In case of conflict, go with the NIST version
 
+- [Build guide](#build-guide)
+  - [Parts list](#parts-list)
+    - [Resin printed components](#resin-printed-components)
+    - [PLA etc. printed components](#pla-etc-printed-components)
+    - [Custom fabricated components](#custom-fabricated-components)
+    - [Purchased components](#purchased-components)
+  - [Build guide:](#build-guide-1)
+    - [Build the frame](#build-the-frame)
+    - [Wire solenoid valves](#wire-solenoid-valves)
+    - [Wire the compute control box](#wire-the-compute-control-box)
+    - [Mount connectors to valves](#mount-connectors-to-valves)
+    - [Physically mount everything to the frame](#physically-mount-everything-to-the-frame)
+    - [Make electronic connections](#make-electronic-connections)
+    - [Make pneumatic and fluidic connections](#make-pneumatic-and-fluidic-connections)
+    - [Assemble front panel](#assemble-front-panel)
+    - [Assemble catch assembly](#assemble-catch-assembly)
+    - [Assemble to flow cell components](#assemble-to-flow-cell-components)
+      - [Prepare the flow cell](#prepare-the-flow-cell)
+      - [Install AFL flow cell components on instrument:](#install-afl-flow-cell-components-on-instrument)
+    - [Provision Pi](#provision-pi)
+  - [Comissioning](#comissioning)
+    - [Test valve function](#test-valve-function)
+    - [Connect and prepare:](#connect-and-prepare)
+    - [Final software configurations](#final-software-configurations)
+    - [Connect a Jubilee and move it to a safe position](#connect-a-jubilee-and-move-it-to-a-safe-position)
+    - [Bring up the app](#bring-up-the-app)
+    - [Connect with the web app GUI:](#connect-with-the-web-app-gui)
+    - [Connect with Science-Jubilee](#connect-with-science-jubilee)
+      - [Connect with HTTP](#connect-with-http)
+    - [Basic use](#basic-use)
+      - [Prepare the cell](#prepare-the-cell)
+      - [Load a sample](#load-a-sample)
+      - [Rinse the cell](#rinse-the-cell)
+    - [Troubleshooting](#troubleshooting)
+      - [Queue pausing](#queue-pausing)
+      - [Solenoid valves aren't switching when they are supposed to](#solenoid-valves-arent-switching-when-they-are-supposed-to)
+      - [Sample stopping problems](#sample-stopping-problems)
+      - [Samples and rinse solution leak out of the catch](#samples-and-rinse-solution-leak-out-of-the-catch)
+    - [Registering the AFL server as a systemd service](#registering-the-afl-server-as-a-systemd-service)
+  - [Additional resources](#additional-resources)
+
+
 ## Parts list
 
 ### Resin printed components
@@ -12,8 +54,6 @@ We suggest printing these parts out of an engineering SLA resin, such as Formlab
 | --- | --- | --- |
 | Catch holder | Catch | https://github.com/pbeaucage/AFL-hardware/blob/main/CAD-NewOrgScheme/AFL-101-(LoaderV2)/002-(CatchCarrierAssy)/AFL-101-002-01-0D%20CatchlessCatchHolder-Braced-For1inCatch-Sidebar-Lowered.stl |
 | Piston arm/ elevator arm | Catch | https://github.com/pbeaucage/AFL-hardware/blob/main/CAD-NewOrgScheme/AFL-101-(LoaderV2)/002-(CatchCarrierAssy)/AFL-101-002-01-2B%20Elevator%20arm%20r2.stl |
-
-
 
 ### PLA etc. printed components
 Brackets, mounts, etc. that aren't struturally critical
@@ -35,8 +75,6 @@ Brackets, mounts, etc. that aren't struturally critical
 | Regulator rail mount for static regulator | Frame |https://github.com/brendenpelkie/AFL-sample-loader/blob/main/fabrication_files/stl/Regulator_mount%20v3.stl | Need 2, intended to work with manufacturer mounting bracket |
 
 
-
-
 ### Custom fabricated components
 
 | Part | Link | Notes |
@@ -44,48 +82,81 @@ Brackets, mounts, etc. that aren't struturally critical
 | X-ray piston | https://github.com/pbeaucage/AFL-hardware/blob/main/CAD-NewOrgScheme/AFL-101-(LoaderV2)/001-(CatchAssy)/Catches/piston%20for%20xray.stp and https://github.com/pbeaucage/AFL-hardware/blob/main/CAD-NewOrgScheme/AFL-101-(LoaderV2)/001-(CatchAssy)/Piston-Xray-Drawing.pdf | We did not actually have these made so can't directly advise on procurement. Machine out of HDPE. Can be procured from sendcutsend etc, expensive for small quantities |
 | X-ray catch |https://github.com/pbeaucage/AFL-hardware/blob/main/CAD-NewOrgScheme/AFL-101-(LoaderV2)/001-(CatchAssy)/Catches/catch%20for%20xray.stp and  https://github.com/pbeaucage/AFL-hardware/blob/main/CAD-NewOrgScheme/AFL-101-(LoaderV2)/001-(CatchAssy)/Catch-Xray-Drawing.pdf | |
 
-- Frame parts:
-    - extrusion parts
-    - some brackets
-    - Piece of acrylic to cut a panel out of
+### Purchased components
 
-Electronics:
-- Raspberry Pi
-- Relay plate
-- power distribution block
-- 24 V power supply. Note ours is kinda sketchy - go with something NRTL listed if you want people to sign off on it
-- Labjack. Note you can probably get away with using something else (read cheaper) here, like just using the RPi potentially
-- Power entry module
-- Bubble sensor
-- Various wiring and M12 connectors for panel connections
+| ﻿Component name | Vendor | Vendor part number | Link | Unit Price (Apr 2025) | Quantity | Extended price | Notes |
+|---|---|---|---|---|---|---|---|
+| **Catch assembly** |  |  |  |  |  |  |  |
+| Air-powered hold-down fixture clamp | McMaster-Carr | 50185A34 | https://www.mcmaster.com/50185A34/ | 518 | 1 | 518 |  |
+| 5-way air directional control valve | McMaster-Carr | 6425k18 | https://www.mcmaster.com/6425K18/ | 233 | 1 | 233 |  |
+| 1/8" OD tubing | McMaster-Carr | 5548K45 | https://www.mcmaster.com/5548K966/ | 25 | 1 | 25 | 25 ft likely sufficient for internal connections and a short run from air supply. Get more if you need to make a long connection to your air supply |
+| screws to bolt clamp to base - 5/16-24 x 3inch socket head cap screw | McMaster-Carr | 91251A370 | https://www.mcmaster.com/91251A370/ | 11.48 | 1 | 11.48 | You need 3, come in packs of 5 from McMaster |
+| 5/16 nylock nuts | McMaster-Carr | 91831A125 | https://www.mcmaster.com/91831A125/ | 8.42 | 1 | 8.42 | You need 3, comes in packs of 50 from Mcmaster |
+| 5/16 washers | McMaster-Carr | 92141A030 | https://www.mcmaster.com/92141A030/ | 7.53 | 1 | 7.53 | You need 3 |
+| M5x10 button head screw | From assortment pack - see below |  |  |  |  | 0 |  |
+| 1/4-20 x 3" socket head cap screw | McMaster-Carr | 92196A823 | https://www.mcmaster.com/92196A823/ | 17.57 | 1 | 17.57 | You need 1, they come in a 10 pack. Used to mount piston to catch arm. 2" of 1.5" even is probably better here |
+| 1/4-20 nuts (no nylock just basic nuts) | McMaster-Carr | 92673A113 | https://www.mcmaster.com/92673A113/ | 2.49 | 1 | 2.49 |  |
+| 1/4-20 washers | McMaster-Carr | 92141A029 | https://www.mcmaster.com/92141A029/ | 5.5 | 1 | 5.5 |  |
+| Screws to mount catch to base - 6/32 x 2" socket cap screws | McMaster-Carr | 92196A169 | https://www.mcmaster.com/92196A169/ | 4.96 | 1 | 4.96 | You need 2 - mount catch and nut to catch base |
+| 6/32 nuts (nylock) | McMaster-Carr | 91831A007 | https://www.mcmaster.com/91831A007/ | 5.83 | 1 | 5.83 | You need 2   |
+| **General pneumatic supplies and fittings** |  |  |  |  |  |  |  |
+| Relieving adjustable regulator | McMaster-Carr | 8812K52 | https://www.mcmaster.com/8812K52/ | 31 | 2 | 62 |  |
+| Mounting brackets for regulators | McMaster-Carr | 8812K62 | https://www.mcmaster.com/8812K62/ | 4 | 2 | 8 |  |
+| 1/4" NPT x 1/4" tube push connector | McMaster-Carr | 5779K109 | https://www.mcmaster.com/5779K109/ | 5.83 | 5 | 29.15 |  |
+| 1/4" NPT x 1/8" tube push connector | McMaster-Carr | 5779K243 | https://www.mcmaster.com/5779K243/ | 8.2 | 2 | 16.4 |  |
+| 1/4" push to connect tee  | McMaster-Carr | 5779K34 | https://www.mcmaster.com/5779K34/ | 7.43 | 1 | 7.43 |  |
+| 1/4" NPT x 1/4" Tube elbow push to connect connector | McMaster-Carr | 5779K152 | https://www.mcmaster.com/5779K152/ | 4.7 | 3 | 14.1 |  |
+| **Fluid dispensing system** |  |  |  |  |  |  |  |
+| Digital regulator | McMaster | 8083T1 | https://www.mcmaster.com/8083T1/ | 810 | 1 | 810 |  |
+| Cable for regulator | Digikey | 10-04466 | https://www.digikey.com/en/products/detail/tensility-international-corp/10-04466/21777514 | 19 | 1 | 19 |  |
+| Solenoid valve  | McMaster | 5001T36 | https://www.mcmaster.com/5001T36/ | 85 | 4 | 340 |  |
+| System vent solenoid whisper valve | Burkert | part 6724 - article 280888 |  | 202 | 1 | 202 | Appears to have been discontinued - any small solenoid with 1/4-28 fittings should work here |
+| Check valves | Masterflex | MFLX01355-24 | https://www.avantorsciences.com/us/en/product/NA5132420/masterflex-inert-in-line-check-valves-peek-avantor | 73.5 | 5 | 367.5 |  |
+| 5PSI PRV | Idex | U-455 | https://www.idex-hs.com/store/product-detail/pressure_relief_valve_assembly_5_psi/u-455?search=true | 212.29 | 1 | 212.29 | This is suggested but we chose to operate without it in place. |
+| 20PSI PRV | Idex | P-791 | https://www.idex-hs.com/store/product-detail/bpr_assembly_20_psi/p-791 | 152 | 1 | 152 |  |
+| 1000mL pressure rated bottles | Duran | Pressure plus 1000mL GL45 |  | 40 | 2 | 80 |  |
+| GL45 3-port caps | Cole-Parmer | EW-12018-01 | https://www.coleparmer.com/i/cole-parmer-vaplock-solvent-delivery-cap-with-304-ss-port-thread-inserts-three-1-4-28-gl45-1-ea/1201801 | 66 | 2 | 132 |  |
+| Bubble detector | Digikey | 365-1490-ND | https://www.digikey.com/en/products/detail/tt-electronics-optek-technology/OCB350L062Z/1942310?s=N4IgTCBcDaIEIHkCCAlAIgAgMJIDIEk4Vt8UsBVfAFQwQAU4BmAVgAZdWA2CAXQF8gA | 26 | 2 | 52 | 1 needed, strongly suggest having a spare |
+| 1/16" OD tubing | McMaster | 5239K23 | https://www.mcmaster.com/5239K23/ | 36 | 1 | 36 | 25ft may be enough - check tubing length needed to reach instrument |
+| 1/8" OD tubing | McMaster | 5548K966 | https://www.mcmaster.com/5548K966-5548K401/ | 25 | 1 | 25 | 25ft should be enough. Check material compatability for your system |
+| 1/4-28 F to 10-32 M adapter | Idex | 1582 | https://www.idex-hs.com/store/product-detail/english_thread_adapter_10_32_male_x_1_4_28_female/1582 | 74.52 | 1 | 74.52 |  |
+| 1/4-28 fittings | Idex | 1451 | https://www.idex-hs.com/store/product-detail/flangeless_fittings_kit/1451?search=true | 357 | 1 | 357 | Suggested to just buy the kit |
+| 1/8" push to connect to 10-32 fittings | McMaster | 5779k241 | https://www.mcmaster.com/5779K241/ | 4.35 | 8 | 34.8 |  |
+| 1/8" push to connect tee fittings | McMaster | 5779K31 | https://www.mcmaster.com/5779K31/ | 7.58 | 3 | 22.74 |  |
+| Connector crimp for burkert valve | Digikey | SPH-002T-P0.5S | https://www.digikey.com/en/products/detail/jst-sales-america-inc/SPH-002T-P0-5S/527359?s=N4IgTCBcDaICwFYEFoCMqwHY3IHIBEQBdAXyA | 4.09 | 1 | 4.09 | You need 2, it looks like you are buying 100 now.  |
+| Connector housing for burkert valve | Digikey | PHR-2 | https://www.digikey.com/en/products/detail/jst-sales-america-inc/PHR-2/608607 | 0.1 | 2 | 0.2 |  |
+| **Control electronics** |  |  |  |  |  |  |  |
+| Raspberry Pi 4 8GB | PiShop |  | https://www.pishop.us/product/raspberry-pi-4-model-b-8gb/ | 75 | 1 | 75 |  |
+| PiPlates Relayplate | PiPlates | RELAYPlate | https://pi-plates.com/relayr1/ | 42 | 1 | 42 |  |
+| Labjack T4 | Labjack | T4 | https://labjack.com/products/labjack-t4 | 280 | 1 | 280 | Used to read voltage of sensor and set voltage for digital regulator. Should be possible to do this with a raspberry pi and save some $$ |
+| Labjack DAQ TIC | Labjack | LJTick-DAC | https://labjack.com/products/ljtick-dac | 95 | 1 | 95 |  |
+| 24V power supply | Meanwell | LRS-350-24 | https://www.amazon.com/MEAN-WELL-LRS-350-24-350-4W-Switchable/dp/B013ETVO12/?_encoding=UTF8&pd_rd_w=czC45&content-id=amzn1.sym.d0ebfbb2-6761-494f-8e2f-95743b37c35c%3Aamzn1.symc.50e00d6c-ec8b-42ef-bb15-298531ab4497&pf_rd_p=d0ebfbb2-6761-494f-8e2f-95743b37c35c&pf_rd_r=P3NGMT1FE76ZJF4F5DE3&pd_rd_wg=Lk0QN&pd_rd_r=15057e39-23bc-4c85-9e15-0580f2191d70&ref_=pd_gw_ci_mcx_mr_hp_atf_m | 30 | 1 | 30 |  |
+| 22g wire - single strand | Generic |  | https://www.amazon.com/TUOFENG-Hookup-Wires-6-Different-Colored/dp/B07TX6BX47?crid=1KSZ1FWIIGHIJ&dib=eyJ2IjoiMSJ9.WSg2cJvoMznQ1mF6NKXgDjgxahf8h3f91Jh03RD4XNwBZKF9PamtRq8n660GOvLT7RiqfZP0I97wmYF5tKv7EggqDlK4WR3KXrD2ElPyw-DLkFNcT6cXIggNRQfMchc3H86Xq-85_g4iV5ChHaG6jULzsCHBqcD7_vpAyocV_EFmM-_fNTIdxLxnJdTSipcYpk_Q6B5AGioFLfdmC4G123MV9XRSKwXi_EXIxU1zH4YfjPIm9Q3DgG-xMBw2Rpd8q3K6aelP2tPsLOWgrjHnrs9awBJa5BIx0kpYlRMK9jw.iVjGW5KIguuyh2-91oruCqZ1TtyjhcX83hOMJ0EZohM&dib_tag=se&keywords=22g%2Bhookup%2Bwire&qid=1713377808&s=industrial&sprefix=22g%2Bhookup%2Bwir%2Cindustrial%2C179&sr=1-1&th=1 | 15 | 1 | 15 |  |
+| 22g wire dual conductor |  |  | https://www.amazon.com/AOTORUA-Electrical-Oxygen-Parallel-Extension/dp/B088RC5ZT3?crid=JCC2KSNPTAQL&dib=eyJ2IjoiMSJ9.uU_5gBszooQmZauIS4C55LX-OxqjEiDrdTclo5uDa_SDvQWYI7KIJzNWZ8kWs2xM4wMuNwfh8w58OW1FO_WQMVSgjA9fWe3rTzNvqsfxfnCakHmi9LEH6a8_-oUhKCGhNQKLHacw5KfgxMvHgEnhrAoCwtQxGYoOo3nrkxIsdeAmvig5YvGFk1Q82HVx4ptFo-2lJ_r-KliQd7bpcVYD8Q.Zf1ZWTcd8FoSbHQpOFayQj2HCIO6PLldRA_H6oumQwk&dib_tag=se&keywords=aotorua+hookup+wire&qid=1713311987&s=industrial&sprefix=aotorua+hookup+wir%2Cindustrial%2C121&sr=1-3 | 15 | 1 | 15 |  |
+| 1/8" flexible braided cable sleeve | Alextech |  | https://www.amazon.com/100ft-Expandable-Braided-Sleeving-Sleeve/dp/B074GN12PY?crid=11KZ0EUHWKX6O&dib=eyJ2IjoiMSJ9.ZJkuDZRpSa8p_gUxguZ_K7I_Tldf3XPNQ7eZNKYuwkVFmxKfysOjXxTGpB28jqAeu6SJKZT3L6LK_iYsPFaRYqN5WG36POLmvoAc0SWWHMehwXC1mYAC9cYZxFKRF8A-BTt8DUFPR2cyNNhlIjLBHfpwIzx1crwA3jZdCEGYehArByidZunv-RttXiJQYGD1pe3718rDuz5RF3bVYJkLNML8rz8jem2mg48LN_CY-OY.f_pS8ld9DWrLZHVgCKjktoI_9yKG_MGJTjH48VmqmrE&dib_tag=se&keywords=expandable%2Bbraided%2Bsleeving%2B1%2F4&qid=1747976103&sprefix=expandable%2Bbraided%2B%2Caps%2C739&sr=8-4&th=1 | 1 | 13 | 13 | Optional but suggested  |
+| quick connectors - receptacle housing | Digikey (JST) | SMP-02V-BC | https://www.digikey.com/en/products/detail/jst-sales-america-inc/SMP-02V-BC/1835574?s=N4IgTCBcDaICwFYEFowE4x2QOQCIgF0BfIA | 20 | 0.1 | 2 |  |
+| quick connectors - receptacle crimp | Digikey( JST) | SHF-001T-0.8BS | https://www.digikey.com/en/products/detail/jst-sales-america-inc/SHF-001T-0-8BS/527351?s=N4IgTCBcDaICwFYEFoCMqyrcgcgERAF0BfIA | 40 | 0.1 | 4 |  |
+| quick connectors - socket housing | Digikey | SMR-02V-B | https://www.digikey.com/en/products/detail/jst-sales-america-inc/SMR-02V-B/764265?s=N4IgTCBcDaICwFYEFowE4wDZkDkAiIAugL5A | 20 | 0.1 | 2 |  |
+| quick connectors  - socket crimp | Digikey | SYM-001T-P0.6(N) | https://www.digikey.com/en/products/detail/jst-sales-america-inc/SYM-001T-P0-6-N/1465026?s=N4IgTCBcDaICwFYEFoCMBOADOtyByAIiALoC%2BQA | 40 | 0.1 | 4 |  |
+| power distribution block | Amazon |  | https://www.amazon.com/OONO-Position-Terminal-Distribution-Module/dp/B08TBXQ7H6?crid=2QQKIBI34BWN6&dib=eyJ2IjoiMSJ9.TyW4XcJK91XHfZ1hB2XxVG8RNOK-Sd9ASYgPFD863yOaq-eywlgzPZhj7DfqN-g6VAqMwy5-iH_e3kvR0liyMvur4Eg8qpzOu3foD8ny7KL_gT8LXTveHKuKFhthvg-mGv_R32rXwcrPvB7-GLyv2ae4bcCTHDSoS6ITQfKjHIshRiosOqWA3mjqkjRNxUSL2G4LQ2fRWSDqKF5_JTXPDdDH3MVjwgw3lS1wRwzyeWOcPfjNxWz1ChmgRsUu7wb7Uvjp_RUALPJic0vX1k-ZGVO9wyj9y2dMwm827llu1eY.rsQEDjTTnnNYaUHDYR-rr_W7qrggb2B89jOENzXNZsk&dib_tag=se&keywords=power%2Bdistribution%2Bblock&qid=1747976788&s=industrial&sprefix=power%2Bdistr%2Cindustrial%2C189&sr=1-5&th=1 | 1 | 1 | 1 |  |
+| 22g ring connectors | Digikey | 190700040 | https://www.digikey.com/en/products/detail/molex/0190700040/279074?s=N4IgTCBcDaIOoFkCMAOMB2AzAWgHIBEQBdAXyA | 15 | 0.2 | 3 |  |
+| Butt splices |  | A09010-ND | https://www.digikey.com/en/products/detail/te-connectivity-amp-connectors/321198/255782?s=N4IgTCBcDaIIIAYCcCCMCC0A5AIiAugL5A | 20 | 0.33 | 6.6 | Nice to have on hand, or substitute your favorite other wire joining method.  |
+| **Frame** |  |  |  |  |  |  |  |
+| 20x20mm aluminum extrusion  | 8020.com | 20-2020 | https://8020.net/20-2020.html | 1 | 90 | 90 | Need 4x24", 4x22", 4x4.2" |
+| 22x24" acrylic panel | Generic |  | https://www.amazon.com/24-Black-Acrylic-Plexiglass-Opaque/dp/B00IWACJ3Q?source=ps-sl-shoppingads-lpcontext&ref_=fplfs&psc=1&smid=A1FWWCVO9POVQF&gQT=0 | 1 | 30 | 30 | May need to cut down a larger panel |
+| M5 blind T nuts | Generic |  | https://www.amazon.com/Sutemribor-Hammer-Fastener-Aluminum-Profile/dp/B07FPLZXTF?crid=1RMG9CIN2T3RG&dib=eyJ2IjoiMSJ9.pTijVLUi_yVyINyHNamxRnyzEUhkVrU07S6UTNAbBOfK3mhbBgH1SxNQ6-oLwuky8Z7Pgy39Vl5lFZHqmB8zgrgCnj7ymOOK7yH02snKvP7XTlgZv8teL1m3F_Jdv_RNKK-xQ2Eu1RN3kGUXaJl8_KPqOX0A46K0Q0eK_eRK3DqYKHAmrwWON3CvSYlc2M2ar11Ol3K25LLa-1aprmuLA2P_ntfdGE3JCDbzptZyRow.0SaKrworAj7GL95DA03-WE4Tcv0PxuGOkd3Ii63D2l4&dib_tag=se&keywords=metric%2Bt%2Bnuts%2Bfor%2Bextrusion&qid=1747976894&sprefix=metric%2Bt%2Bnuts%2Bfor%2Bextrusion%2Caps%2C157&sr=8-4&th=1 | 1 | 8 | 8 | Suggest getting an assortment |
+| 2020 corner bracket plates | Generic |  | https://www.amazon.com/Outside-Bracket-Aluminum-Profile-Connector/dp/B07J6B9FJ1?crid=3OBDWME13RQOC&dib=eyJ2IjoiMSJ9.udQxPygCfvgcuiG9xjtB_h3Ez7JIClfbX0eXMIENgoQ0aAZLEI7hLOOmbnr8QMmxDfyUcqNDr6RtHhxpNlGriLbu0h3X50kGI1sGVvpaftMYgPhMkPImwVi-fV5lfU4FR7tUa7oRCyGcXv-Sd-2t-O1rCkCoPMkOzGG-oZPH0svPKecM_sWjz-UrAOJz96s_8nK76LUX7DDgYm92Ri64oZkJ9-6-rXK5_lTGnJfGZKQ.jofeUdOJkzeTsphOCOnuF4TUhI6Ueld691kt9iLkUbs&dib_tag=se&keywords=2020+corner+bracket+plate&qid=1747976832&sprefix=2020+corner+%2Caps%2C152&sr=8-5 | 2 | 17 | 34 | Need 12 brackets total. |
+| Panel mount diverting valve | McMaster | 4149T42 | https://www.mcmaster.com/4149T42/ | 1 | 47 | 47 |  |
+| 1/4" push to connect panel mount pass through fittings | McMaster | 5779K677 | https://www.mcmaster.com/5779K677/ | 3 | 7.22 | 21.66 |  |
+| 1/8" push to connect panel mount pass through fittings | McMaster | 5779K675 | https://www.mcmaster.com/5779K675/ | 4 | 6.22 | 24.88 |  |
+| Panel mount 4-pin M12 connector - male | Amazon |  | https://www.amazon.com/gp/product/B0BBQTDLHP?smid=A3EPS00U1KMPT0&th=1 | 1 | 17 | 17 | Need 2 |
+| M12 connector female housing | Amazon |  | https://www.amazon.com/gp/product/B09YLP4K5W?smid=A3EPS00U1KMPT0&th=1 | 1 | 18 | 18 | Need 2 |
+| Metric buttonhead hardware assortment | Amazon |  | https://www.amazon.com/dp/B07L9MMN9K?ref_=ppx_hzsearch_conn_dt_b_fed_asin_title_1&th=1 | 1 | 28 | 28 |  |
 
-Pneumatic components:
-- 2x static regulators
-- digital regulators
-- 5/2 valve
-- solenoid valves
-- 1/4" tubing
-- brukert release valve for arm
-- PRV valves
+Notes on purchasing:
+- Nothing here implies an endorsement of a particular vendor. Links are provided to give example sources.
+- Many of the specific-sized fasteners may be better purchased from a vendor that allows for small quantities, such as Bolt Depot in the US.
 
-
-Fluidic components:
-- Box of 1/4-28 fittings
-- 1/8" OD and 1/16" OD PTFE tubing
-- check valves
-- Pressure plus bottles and caps
-- panel pass through fittings
-
-Custom fabricated components:
-- Catch and piston
-
-Printed parts:
-- Catch mount base thing
-- Compute control module thing
-- PEM housing
-- Various frame brackets
-- rinse bottle holders
-- 5/2 valve holder
 
 
 ## Build guide:
@@ -238,7 +309,7 @@ Assuming you are starting from a broken or fouled flow cell:
 1. Drill out the old glass and epoxy using a lathe. Have the machine shop take care of this for you.
 2. Epoxy a new capillary into place. Completely sealing the edges of the capillary without getting epoxy all over the center of the glass where the beam will be is an art form. 
 3. Score the ends of the capillary flush with the end of the threads
-4. Sand the ends of the assembled flow cell so that the capillary and the brass are flush, with no rough edges or epoxy protrusions. This is essential to preventing leaks in the next step
+4. Sand the ends of the assembled flow cell so that the capillary and the brass are flush, with no rough edges or epoxy protrusions. *This is essential to preventing leaks in the next step.*
 5. Determine the appropriate number of shims to include on each end of the flow cell fittings. You need enough shims that the inner O-ring compresses enough to seal before the outer O-ring and threads bottom out. This is a trial and error process. Start with ~3 per side. 
 6. Assemble the tubing-shim-o-ring-fitting stack, as shown in the picture. Make sure to start with a clean, square tubing end cut using a tubing cutter tool. The order is 
     - Put the tubing on the tube, with the threaded end facing the end of the tubing you will mount to the flow cell. This will eventually be the tubing that comes from the AFL Jubilee catch bottom, but start with some spare tubing to leak test first.
@@ -252,7 +323,7 @@ Assuming you are starting from a broken or fouled flow cell:
 
 <img src='flowcellassembly.png' width = "600"/>
 
-7. Leak test the flow cell. Carefully clamp one end of the tubing with a c-clamp or similar, enough to stop water flow but not enough to tear the tubing. Install a syringe filled with water onto the other tubing end, using a luer lock to 1/4-28 adapter and a 1/4-28 fitting. Release the clamp and flow some water through the tubing. Close the clamp and gently apply pressure to the syringe, making sure not to burst the capillary. Watch for leaks.
+7. Leak test the flow cell. Carefully clamp one end of the tubing with a c-clamp or similar, enough to stop water flow but not enough to tear the tubing. Install a syringe filled with water onto the other tubing end, using a Luer lock to 1/4-28 adapter and a 1/4-28 fitting. Release the clamp and flow some water through the tubing. Close the clamp and gently apply pressure to the syringe, making sure not to burst the capillary. Watch for leaks.
 - If water leaks out of the inside of the flow cell, between the brass and the capillary: The epoxy seal is inadequate, drill out the capillary again and start over.
 - If water leaks out the inside of the fitting between the stainless fitting and the tubing: Add more shims
 - If water leaks out the outside of the fitting, between the brass and the stainless fitting: Less shims or check O-rings are lined up right.
@@ -314,7 +385,7 @@ Assuming you are starting from a fresh install of Raspberry Pi OS 64 bit:
 
 ### Test valve function
 
-Next, check that the valves are all working correctly. Use the [[RelayPlateTesting.ipynb]] notebook to step through all the relays and solenoids. When turning a relay on, you should hear a click and be able to feel it if you hold the solenoid valve. If you hear a quiet click from the control box but don't feel the solenoid click, check your wiring and that the power to the solenoids is on. If you hear nothing, check the RelayPlate configuration. 
+Next, check that the valves are all working correctly. Use the [TestSolenoidValves.ipynb](../TestSolenoidValves.ipynb) notebook to step through all the relays and solenoids. When turning a relay on, you should hear a click and be able to feel it if you hold the solenoid valve. If you hear a quiet click from the control box but don't feel the solenoid click, check your wiring and that the power to the solenoids is on. If you hear nothing, check the RelayPlate configuration. 
 
 ### Connect and prepare:
 In the next few steps, you will make sure everything works and test things out. 
@@ -328,7 +399,7 @@ In the next few steps, you will make sure everything works and test things out.
 
 ### Final software configurations
 You will be setting configurations for your system in multiple places. You should take the time to read through each of these and understand what is going on where. 
-- `server_scripts/LoaderPneuaticJubilee.py`: This is the script to actually launch the AFL loader process. Configuration here includes the relay number to solenoid assignment, Labjack wiring, and science-jubilee IP address.
+- `server_scripts/LoaderPneumaticJubilee.py`: This is the script to actually launch the AFL loader process. Configuration here includes the relay number to solenoid assignment, Labjack wiring, and science-jubilee IP address.
 - `AFL/automation/loading/PneumaticPressureSampleCellJubilee.py`: This is the main python class that runs the AFL sample loader. Configuration related to the load sequencing including rinse programs and timing are set as class variables of the PneumaticPressureSampleCell class.
 - `AFL/automation/loading/LoadStopperDriver.py`: Configurations related to the detection of samples by the bubble detector are set here, as class variables of the LoadStopperDriver class. 
 
@@ -503,7 +574,7 @@ When doing any troubleshooting, it is best to run the AFL server directly (ie `p
 - Assertion errors relating to machine state not being met: Look at condition causing assertion to flag.
 
 #### Queue pausing
-The queue is set up to pause anytime something goes awry, and even when things are done out of order, for example trying to prepare the cell before rinsing it. If something pauses the queue, first fix the issue, then 'unpause' the queue using the button on the GUI or the unpuase_queue method of the science-jubilee tool
+The queue is set up to pause anytime something goes awry, and even when things are done out of order, for example trying to prepare the cell before rinsing it. If something pauses the queue, first fix the issue, then 'unpause' the queue using the button on the GUI or the unpause_queue method of the science-jubilee tool
 
 #### Solenoid valves aren't switching when they are supposed to
 You can follow the state the valves are supposed to be in by watching the status on the web GUI. If you suspect a valve isn't switching correctly, test it by manually toggling it with the valve test notebook linked above. Check the wiring if you are having issues, this is the most likely cause.
@@ -513,7 +584,7 @@ You can follow the state the valves are supposed to be in by watching the status
 The sample stopping process is tricky and needs to be tuned. When the sample is being loaded, the bubble sensor is constantly outputting a voltage. That voltage is supposed to change significantly (~1.5V) when the phase present in the tube changes from air to liquid. This voltage is constantly read by the Labjack and processed by the StopLoadCBV2.process_signal() function in `loading/SensorCallbackThread.py`. This function runs in a separate thread from the main AFL sample loading process, and calls back to stop the load process by closing the sample hold solenoid valve once the sample is detected. Getting this to work reliably will probably require some tuning
 
 **Tuning the sensor hardware**
-The sensitivity of the sensor itself can be changed by moving the jumper between the 3 pins. This is documented in the sensor data sheet. Test different positions by manually flowing a representative liquid through tubing inside the sensor and manually watching the sensor voltage (ex with a multimeter) (while the sensor is plugged into an appropirate 5V power supply). You want to see a decent sized (1-2V) change between liquid and no liquid, without a lot of noise. Move the jumper until you find a position that works for your sample and ambient lighting conditions. 
+The sensitivity of the sensor itself can be changed by moving the jumper between the 3 pins. This is documented in the sensor data sheet. Test different positions by manually flowing a representative liquid through tubing inside the sensor and manually watching the sensor voltage (ex with a multimeter) (while the sensor is plugged into an appropriate 5V power supply). You want to see a decent sized (1-2V) change between liquid and no liquid, without a lot of noise. Move the jumper until you find a position that works for your sample and ambient lighting conditions. 
 
 **Tuning the edge detection parameters**
 The above-mentioned sensor callback signal process function checks for several conditions to be satisfied before stopping the load. Read through the code to understand all of them. Important parameters are the amount of time to take a baseline signal for before looking for changes indicating a sample, the voltage step required to stop a load, the number of points above the threshold that must be measured for a load to register (eliminating false positives due to small amounts of remaining wash solution). To change these values, edit them in the `loading/LoadStopperDriver.py` by changing the default class constants, then delete the cached constants by deleting the file `~/.afl/LoadStopperconfig.json` or whatever the cache is called. It is helpful to print the actual observed values for these criteria when diagnosing load stopping issues. If the load stopping is not sensitive enough, i.e. samples flow right past the sensor without being stopped, try decreasing the voltage threshold or decreasing the number of points that the threshold must be observed for. If the load stopping is too sensitive, i.e. the system stops the load before the sample reaches the flow cell, try increasing these values or increasing the minimum sample load time. 
@@ -549,7 +620,7 @@ After=network.target
 [Service]
 Type=simple
 ExecStart=/bin/bash <absolute path to script from step 1>/start_afl.sh
-WorkingDirectory=<abosolute path to home directory>
+WorkingDirectory=<absolute path to home directory>
 StandardOutput=inherit
 StandardError=inherit
 Restart=always
@@ -563,7 +634,7 @@ WantedBy=multi-user.target
 3. Reload systemd: `sudo systemctl daemon-reload`
 4. Register the service to start at bootup: `sudo systemctl enable afl_server.service`
 5. reboot
-6. Make sure it came up at boot: `systemctl status myscript.service`
+6. Make sure it came up at boot: `systemctl status afl_server.service`
 
 ## Additional resources
 Once again, it is highly suggested to get up to speed with the NIST version of this system before replicating what is documented here.
